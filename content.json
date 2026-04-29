@@ -1,0 +1,86 @@
+{
+  "hero": {
+    "badge": "Websites + AI Automation for Local Businesses",
+    "title": "Professional Websites and <span>AI Assistants</span> for Local Businesses",
+    "text": "QuickWeb.india700 helps schools, restaurants, coaching institutes, stores, and local businesses get a modern online presence and automate customer communication with smart AI systems."
+  },
+  "about": {
+    "title": "Helping small businesses grow with modern websites and AI technology.",
+    "text": "Our mission is to make digital growth simple for local businesses that want more customers, better communication, and a professional online identity."
+  },
+  "pricing": [
+    {
+      "name": "Starter",
+      "oldPrice": "₹10,000",
+      "price": "₹1,999",
+      "description": "Best for small businesses that need a clean online presence.",
+      "featured": false,
+      "features": [
+        "One-page business website",
+        "Mobile responsive design",
+        "Contact form",
+        "Basic SEO setup",
+        "WhatsApp button",
+        "Google Maps section"
+      ]
+    },
+    {
+      "name": "Business",
+      "oldPrice": "₹30,000",
+      "price": "₹4,999",
+      "description": "Best for businesses that want a stronger website and lead system.",
+      "featured": true,
+      "features": [
+        "Multi-section professional website",
+        "Service pages or product sections",
+        "Image gallery",
+        "Lead enquiry form",
+        "Google Maps integration",
+        "SEO friendly structure",
+        "Basic AI enquiry flow setup"
+      ]
+    },
+    {
+      "name": "Premium",
+      "oldPrice": "₹70,000",
+      "price": "₹9,999",
+      "description": "Best for businesses that want website plus AI communication automation.",
+      "featured": false,
+      "features": [
+        "Complete business website",
+        "Advanced contact and enquiry system",
+        "AI assistant automation setup",
+        "Payment reminder call flow",
+        "Event invitation automation",
+        "Business notification automation",
+        "Launch support and improvements"
+      ]
+    }
+  ],
+  "projects": [
+    {
+      "id": "school-demo",
+      "title": "Bright Future School",
+      "tag": "School Demo",
+      "description": "Admissions, notices, gallery, events, contact form, and parent communication support.",
+      "link": "",
+      "image": "https://images.unsplash.com/photo-1580582932707-520aed937b7b?auto=format&fit=crop&w=900&q=80"
+    },
+    {
+      "id": "restaurant-demo",
+      "title": "Urban Taste Restaurant",
+      "tag": "Restaurant Demo",
+      "description": "Menu showcase, opening hours, table enquiry, location map, and customer update automation.",
+      "link": "",
+      "image": "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=900&q=80"
+    },
+    {
+      "id": "coaching-demo",
+      "title": "Success Point Coaching",
+      "tag": "Coaching Demo",
+      "description": "Course details, batch timings, enquiry form, result highlights, and fee reminder automation.",
+      "link": "",
+      "image": "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=900&q=80"
+    }
+  ]
+}
