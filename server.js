@@ -14,7 +14,18 @@ const PORT = process.env.PORT || 3000;
    BASIC SECURITY
 =========================*/
 
-app.use(helmet());
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        imgSrc: ["'self'", "https:", "data:"],
+        scriptSrc: ["'self'", "'unsafe-inline'"],
+        styleSrc: ["'self'", "'unsafe-inline'", "https:"]
+      }
+    }
+  })
+);
 
 const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
