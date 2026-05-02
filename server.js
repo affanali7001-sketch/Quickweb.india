@@ -1,10 +1,3 @@
-const { createClient } = require("@supabase/supabase-js")
-
-const supabase = createClient(
-  "https://ctjwjqpbzhtomgllwhdo.supabase.co",
-  "sb_publishable_dEfra4mKpdaoFXsdKsjKzg_3540-8cP"
-)
-
 const express = require("express");
 const multer = require("multer");
 const fs = require("fs");
@@ -13,7 +6,12 @@ const crypto = require("crypto");
 const bcrypt = require("bcrypt");
 const helmet = require("helmet");
 const rateLimit = require("express-rate-limit");
+const { createClient } = require("@supabase/supabase-js");
 
+const supabase = createClient(
+  "https://ctjwjqpbzhtomgllwhdo.supabase.co",
+  "sb_publishable_dEfra4mKpdaoFXsdKsjKzg_3540-8cP"
+);
 const app = express();
 const PORT = process.env.PORT || 3000;
 
