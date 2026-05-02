@@ -1,3 +1,10 @@
+const { createClient } = require("@supabase/supabase-js")
+
+const supabase = createClient(
+  "https://ctjwjqpbzhtomgllwhdo.supabase.co",
+  "sb_publishable_dEfra4mKpdaoFXsdKsjKzg_3540-8cP"
+)
+
 const express = require("express");
 const multer = require("multer");
 const fs = require("fs");
@@ -108,17 +115,30 @@ function requireAuth(req, res, next) {
 /* =========================
    DATA FUNCTIONS
 =========================*/
+async function readData() {
+  const { data, error } = await supabase
+    .from("site_content")
+    .select("data")
+    .eq("id", 1)
+    .single()
 
-function readData() {
-  try {
-    return JSON.parse(fs.readFileSync(dataPath, "utf8"));
-  } catch {
+  if (error) throw error
+
+  return data.data
+}
+
+catch {
     return { projects: [] };
   }
 }
 
-function writeData(data) {
-  fs.writeFileSync(dataPath, JSON.stringify(data, null, 2));
+async function writeData(content) {
+  const { error } = await supabase
+    .from("site_content")
+    .update({ data: content })
+    .eq("id", 1)
+
+  if (error) throw error
 }
 
 /* =========================
@@ -150,11 +170,11 @@ app.post("/api/login", loginLimiter, async (req, res) => {
 =========================*/
 
 app.get("/api/content", (req, res) => {
-  res.json(readData());
+  res.json(await readData())
 });
 
 app.put("/api/content", requireAuth, (req, res) => {
-  writeData(req.body);
+  await writeData(req.body)
   res.json({ success: true });
 });
 
