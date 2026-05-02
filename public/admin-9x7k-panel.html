@@ -3,93 +3,136 @@
 
 <head>
     <meta charset="UTF-8" />
-    <meta name="robots" content="noidex, nofollow">
+    <meta name="robots" content="noindex, nofollow">
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>QuickWeb Admin</title>
     <link rel="stylesheet" href="admin.css" />
 </head>
 
 <body>
-    <main class="admin-shell">
-        <section class="login-card" id="loginCard">
-            <h1>QuickWeb Admin</h1>
-            <p>Login to edit website content and portfolio projects.</p>
-            <form id="loginForm">
-                <input type="password" id="password" placeholder="Admin password" required />
-                <button type="submit">Login</button>
-            </form>
-            <p class="message" id="loginMessage"></p>
-        </section>
 
-        <section class="dashboard hidden" id="dashboard">
-            <div class="dashboard-top">
-                <div>
-                    <h1>Website Admin Panel</h1>
-                    <p>Edit website content, pricing, and uploaded projects.</p>
-                </div>
-                <div class="top-actions">
-                    <a href="/" target="_blank">View Website</a>
-                    <button id="logoutBtn">Logout</button>
-                </div>
-            </div>
+<main class="admin-shell">
 
-            <form class="admin-card" id="contentForm">
-                <h2>Homepage Content</h2>
+<section class="login-card" id="loginCard">
 
-                <label>Hero Badge</label>
-                <input type="text" id="heroBadgeInput" required />
+<h1>QuickWeb Admin</h1>
 
-                <label>Hero Title</label>
-                <input type="text" id="heroTitleInput" required />
+<p>Login to edit website content and portfolio projects.</p>
 
-                <label>Hero Text</label>
-                <textarea id="heroTextInput" required></textarea>
+<form id="loginForm" autocomplete="off">
 
-                <label>About Title</label>
-                <input type="text" id="aboutTitleInput" required />
+<input 
+type="password"
+id="password"
+placeholder="Admin password"
+required
+autocomplete="new-password"
+/>
 
-                <label>About Text</label>
-                <textarea id="aboutTextInput" required></textarea>
+<button type="submit">Login</button>
 
-                <button type="submit">Save Content</button>
-            </form>
+</form>
 
-            <section class="admin-card">
-                <h2>Pricing Plans</h2>
-                <div id="pricingEditor"></div>
-                <button id="savePricingBtn">Save Pricing</button>
-            </section>
+<p class="message" id="loginMessage"></p>
 
-            <section class="admin-card">
-                <h2>Add Portfolio Project</h2>
-                <form id="projectForm">
-                    <label>Project Name</label>
-                    <input type="text" id="projectTitle" required />
+</section>
 
-                    <label>Business Type</label>
-                    <input type="text" id="projectTag" placeholder="School, Restaurant, Coaching..." required />
 
-                    <label>Description</label>
-                    <textarea id="projectDescription" required></textarea>
+<section class="dashboard hidden" id="dashboard">
 
-                    <label>Website Link</label>
-                    <input type="url" id="projectLink" placeholder="https://example.com" />
+<div class="dashboard-top">
 
-                    <label>Project Image</label>
-                    <input type="file" id="projectImage" accept="image/*" />
+<div>
+<h1>Website Admin Panel</h1>
+<p>Edit website content, pricing, and uploaded projects.</p>
+</div>
 
-                    <button type="submit">Add Project</button>
-                </form>
-            </section>
+<div class="top-actions">
+<a href="/" target="_blank">View Website</a>
+<button id="logoutBtn">Logout</button>
+</div>
 
-            <section class="admin-card">
-                <h2>Manage Portfolio</h2>
-                <div class="project-list" id="projectList"></div>
-            </section>
-        </section>
-    </main>
+</div>
 
-    <script src="admin.js"></script>
+
+<form class="admin-card" id="contentForm">
+
+<h2>Homepage Content</h2>
+
+<label>Hero Badge</label>
+<input type="text" id="heroBadgeInput" required />
+
+<label>Hero Title</label>
+<input type="text" id="heroTitleInput" required />
+
+<label>Hero Text</label>
+<textarea id="heroTextInput" required></textarea>
+
+<label>About Title</label>
+<input type="text" id="aboutTitleInput" required />
+
+<label>About Text</label>
+<textarea id="aboutTextInput" required></textarea>
+
+<button type="submit">Save Content</button>
+
+</form>
+
+
+<section class="admin-card">
+
+<h2>Pricing Plans</h2>
+
+<div id="pricingEditor"></div>
+
+<button id="savePricingBtn">Save Pricing</button>
+
+</section>
+
+
+<section class="admin-card">
+
+<h2>Add Portfolio Project</h2>
+
+<form id="projectForm">
+
+<label>Project Name</label>
+<input type="text" id="projectTitle" required />
+
+<label>Business Type</label>
+<input type="text" id="projectTag" placeholder="School, Restaurant, Coaching..." required />
+
+<label>Description</label>
+<textarea id="projectDescription" required></textarea>
+
+<label>Website Link</label>
+<input type="url" id="projectLink" placeholder="https://example.com" />
+
+<label>Project Image</label>
+<input type="file" id="projectImage" accept="image/*" />
+
+<button type="submit">Add Project</button>
+
+</form>
+
+</section>
+
+
+<section class="admin-card">
+
+<h2>Manage Portfolio</h2>
+
+<div class="project-list" id="projectList"></div>
+
+</section>
+
+
+</section>
+
+</main>
+
+
+<script src="admin.js"></script>
+
 </body>
-
 </html>
