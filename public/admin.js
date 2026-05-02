@@ -22,6 +22,15 @@ function showLogin() {
     loginCard.classList.remove("hidden");
 }
 
+// ✅ FIX: Token expire hone pe auto logout aur login page pe bhejo
+function handleAuthError() {
+    token = "";
+    localStorage.removeItem("quickweb_admin_token");
+    showLogin();
+    loginMessage.textContent = "Session expired. Please login again.";
+    loginMessage.style.color = "#f87171";
+}
+
 async function api(url, options = {}) {
     const response = await fetch(url, {
         ...options,
@@ -31,55 +40,86 @@ async function api(url, options = {}) {
         }
     });
 
+    // ✅ FIX: 401 aane pe auto logout
+    if (response.status === 401) {
+        handleAuthError();
+        throw new Error("Unauthorized - please login again");
+    }
+
     if (!response.ok) {
-        throw new Error("Request failed");
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || `Request failed: ${response.status}`);
     }
 
     return response.json();
 }
 
 async function loadAdminData() {
-    siteData = await api("/api/content");
+    try {
+        siteData = await api("/api/content");
 
-    document.getElementById("heroBadgeInput").value = siteData.hero.badge;
-    document.getElementById("heroTitleInput").value = siteData.hero.title;
-    document.getElementById("heroTextInput").value = siteData.hero.text;
-    document.getElementById("aboutTitleInput").value = siteData.about.title;
-    document.getElementById("aboutTextInput").value = siteData.about.text;
+        // ✅ FIX: Safely load fields — agar koi field missing ho to crash na ho
+        document.getElementById("heroBadgeInput").value = siteData.hero?.badge || "";
+        document.getElementById("heroTitleInput").value = siteData.hero?.title || "";
+        document.getElementById("heroTextInput").value = siteData.hero?.text || "";
+        document.getElementById("aboutTitleInput").value = siteData.about?.title || "";
+        document.getElementById("aboutTextInput").value = siteData.about?.text || "";
 
-    renderPricingEditor();
-    renderProjectList();
+        renderPricingEditor();
+        renderProjectList();
+    } catch (err) {
+        if (!err.message.includes("Unauthorized")) {
+            alert("Error loading data: " + err.message);
+        }
+    }
 }
 
 function renderPricingEditor() {
+    if (!siteData.pricing || !siteData.pricing.length) {
+        pricingEditor.innerHTML = "<p>No pricing plans found.</p>";
+        return;
+    }
+
     pricingEditor.innerHTML = `<div class="pricing-edit-grid">
         ${siteData.pricing.map((plan, index) => `
             <div class="pricing-box">
                 <label>Plan Name</label>
-                <input value="${plan.name}" data-price-field="name" data-index="${index}" />
+                <input value="${plan.name || ""}" data-price-field="name" data-index="${index}" />
 
-                <label>Price</label>
-                <input value="${plan.price}" data-price-field="price" data-index="${index}" />
+                <label>Old Price (strikethrough)</label>
+                <input value="${plan.oldPrice || ""}" data-price-field="oldPrice" data-index="${index}" />
+
+                <label>Current Price</label>
+                <input value="${plan.price || ""}" data-price-field="price" data-index="${index}" />
 
                 <label>Description</label>
-                <textarea data-price-field="description" data-index="${index}">${plan.description}</textarea>
+                <textarea data-price-field="description" data-index="${index}">${plan.description || ""}</textarea>
 
-                <label>Features, one per line</label>
-                <textarea data-price-field="features" data-index="${index}">${plan.features.join("\n")}</textarea>
+                <label>Features (ek line = ek feature)</label>
+                <textarea data-price-field="features" data-index="${index}">${(plan.features || []).join("\n")}</textarea>
             </div>
         `).join("")}
     </div>`;
 }
 
 function renderProjectList() {
+    if (!siteData.projects || !siteData.projects.length) {
+        projectList.innerHTML = "<p>No projects yet.</p>";
+        return;
+    }
+
     projectList.innerHTML = siteData.projects.map((project) => `
         <div class="project-item">
-            <img src="${project.image || "https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=900&q=80"}" alt="${project.title}" />
+            <img 
+                src="${project.image || "https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=900&q=80"}" 
+                alt="${project.title}"
+                onerror="this.src='https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=900&q=80'"
+            />
             <div>
                 <h3>${project.title}</h3>
-                <p>${project.tag}</p>
+                <p><strong>${project.tag}</strong></p>
                 <p>${project.description}</p>
-                ${project.link ? `<a href="${project.link}" target="_blank">Open Project</a>` : ""}
+                ${project.link ? `<a href="${project.link}" target="_blank">🔗 Open Project</a>` : ""}
             </div>
             <div class="project-actions">
                 <button class="danger" onclick="deleteProject('${project.id}')">Delete</button>
@@ -88,10 +128,16 @@ function renderProjectList() {
     `).join("");
 }
 
+// ========================
+// LOGIN
+// ========================
+
 loginForm.addEventListener("submit", async (event) => {
     event.preventDefault();
 
     const password = document.getElementById("password").value;
+    loginMessage.textContent = "Logging in...";
+    loginMessage.style.color = "#94a3b8";
 
     try {
         const response = await fetch("/api/login", {
@@ -104,99 +150,205 @@ loginForm.addEventListener("submit", async (event) => {
 
         if (!response.ok) {
             loginMessage.textContent = data.message || "Login failed";
+            loginMessage.style.color = "#f87171";
             return;
         }
 
         token = data.token;
         localStorage.setItem("quickweb_admin_token", token);
+        loginMessage.textContent = "";
         showDashboard();
         await loadAdminData();
-    } catch (error) {
-        loginMessage.textContent = "Server error";
+
+    } catch (err) {
+        loginMessage.textContent = "Server error. Try again.";
+        loginMessage.style.color = "#f87171";
     }
 });
+
+// ========================
+// LOGOUT
+// ========================
 
 logoutBtn.addEventListener("click", () => {
     token = "";
     localStorage.removeItem("quickweb_admin_token");
     showLogin();
+    loginMessage.textContent = "";
 });
+
+// ========================
+// SAVE CONTENT
+// ========================
 
 contentForm.addEventListener("submit", async (event) => {
     event.preventDefault();
 
-    siteData.hero.badge = document.getElementById("heroBadgeInput").value;
-    siteData.hero.title = document.getElementById("heroTitleInput").value;
-    siteData.hero.text = document.getElementById("heroTextInput").value;
-    siteData.about.title = document.getElementById("aboutTitleInput").value;
-    siteData.about.text = document.getElementById("aboutTextInput").value;
+    const saveBtn = contentForm.querySelector("button[type='submit']");
+    saveBtn.textContent = "Saving...";
+    saveBtn.disabled = true;
 
-    await api("/api/content", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(siteData)
-    });
+    try {
+        // ✅ FIX: siteData null ho to bhi crash na ho
+        if (!siteData) siteData = {};
+        if (!siteData.hero) siteData.hero = {};
+        if (!siteData.about) siteData.about = {};
 
-    alert("Content saved");
+        siteData.hero.badge = document.getElementById("heroBadgeInput").value;
+        siteData.hero.title = document.getElementById("heroTitleInput").value;
+        siteData.hero.text = document.getElementById("heroTextInput").value;
+        siteData.about.title = document.getElementById("aboutTitleInput").value;
+        siteData.about.text = document.getElementById("aboutTextInput").value;
+
+        await api("/api/content", {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(siteData)
+        });
+
+        saveBtn.textContent = "✅ Saved!";
+        setTimeout(() => {
+            saveBtn.textContent = "Save Content";
+            saveBtn.disabled = false;
+        }, 2000);
+
+    } catch (err) {
+        saveBtn.textContent = "❌ Failed!";
+        saveBtn.disabled = false;
+        if (!err.message.includes("Unauthorized")) {
+            alert("Save failed: " + err.message);
+        }
+    }
 });
+
+// ========================
+// SAVE PRICING
+// ========================
 
 savePricingBtn.addEventListener("click", async () => {
-    document.querySelectorAll("[data-price-field]").forEach((field) => {
-        const index = Number(field.dataset.index);
-        const key = field.dataset.priceField;
+    savePricingBtn.textContent = "Saving...";
+    savePricingBtn.disabled = true;
 
-        if (key === "features") {
-            siteData.pricing[index][key] = field.value.split("\n").filter(Boolean);
-        } else {
-            siteData.pricing[index][key] = field.value;
+    try {
+        if (!siteData) siteData = {};
+        if (!siteData.pricing) siteData.pricing = [];
+
+        document.querySelectorAll("[data-price-field]").forEach((field) => {
+            const index = Number(field.dataset.index);
+            const key = field.dataset.priceField;
+
+            if (!siteData.pricing[index]) siteData.pricing[index] = {};
+
+            if (key === "features") {
+                siteData.pricing[index][key] = field.value.split("\n").map(f => f.trim()).filter(Boolean);
+            } else {
+                siteData.pricing[index][key] = field.value;
+            }
+        });
+
+        await api("/api/content", {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(siteData)
+        });
+
+        savePricingBtn.textContent = "✅ Pricing Saved!";
+        setTimeout(() => {
+            savePricingBtn.textContent = "Save Pricing";
+            savePricingBtn.disabled = false;
+        }, 2000);
+
+    } catch (err) {
+        savePricingBtn.textContent = "❌ Failed!";
+        savePricingBtn.disabled = false;
+        if (!err.message.includes("Unauthorized")) {
+            alert("Save failed: " + err.message);
         }
-    });
-
-    await api("/api/content", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(siteData)
-    });
-
-    alert("Pricing saved");
+    }
 });
+
+// ========================
+// ADD PROJECT
+// ========================
 
 projectForm.addEventListener("submit", async (event) => {
     event.preventDefault();
 
-    const formData = new FormData();
-    formData.append("title", document.getElementById("projectTitle").value);
-    formData.append("tag", document.getElementById("projectTag").value);
-    formData.append("description", document.getElementById("projectDescription").value);
-    formData.append("link", document.getElementById("projectLink").value);
+    const addBtn = projectForm.querySelector("button[type='submit']");
+    addBtn.textContent = "Adding...";
+    addBtn.disabled = true;
 
-    const image = document.getElementById("projectImage").files[0];
-    if (image) {
-        formData.append("image", image);
+    try {
+        const formData = new FormData();
+        formData.append("title", document.getElementById("projectTitle").value);
+        formData.append("tag", document.getElementById("projectTag").value);
+        formData.append("description", document.getElementById("projectDescription").value);
+        formData.append("link", document.getElementById("projectLink").value || "");
+
+        const imageFile = document.getElementById("projectImage").files[0];
+        if (imageFile) {
+            formData.append("image", imageFile);
+        }
+
+        const response = await fetch("/api/projects", {
+            method: "POST",
+            headers: { Authorization: `Bearer ${token}` },
+            body: formData
+        });
+
+        if (response.status === 401) {
+            handleAuthError();
+            return;
+        }
+
+        if (!response.ok) {
+            const err = await response.json().catch(() => ({}));
+            throw new Error(err.message || "Add project failed");
+        }
+
+        projectForm.reset();
+        await loadAdminData();
+
+        addBtn.textContent = "✅ Project Added!";
+        setTimeout(() => {
+            addBtn.textContent = "Add Project";
+            addBtn.disabled = false;
+        }, 2000);
+
+    } catch (err) {
+        addBtn.textContent = "❌ Failed!";
+        addBtn.disabled = false;
+        if (!err.message.includes("Unauthorized")) {
+            alert("Error: " + err.message);
+        }
     }
-
-    await fetch("/api/projects", {
-        method: "POST",
-        headers: { Authorization: `Bearer ${token}` },
-        body: formData
-    });
-
-    projectForm.reset();
-    await loadAdminData();
-    alert("Project added");
 });
 
+// ========================
+// DELETE PROJECT
+// ========================
+
 async function deleteProject(id) {
-    if (!confirm("Delete this project?")) return;
+    if (!confirm("Is project ko delete karna chahte ho?")) return;
 
-    await api(`/api/projects/${id}`, {
-        method: "DELETE"
-    });
-
-    await loadAdminData();
+    try {
+        await api(`/api/projects/${id}`, { method: "DELETE" });
+        await loadAdminData();
+    } catch (err) {
+        if (!err.message.includes("Unauthorized")) {
+            alert("Delete failed: " + err.message);
+        }
+    }
 }
+
+// ========================
+// AUTO LOGIN CHECK
+// ========================
 
 if (token) {
     showDashboard();
-    loadAdminData().catch(() => showLogin());
+    loadAdminData().catch(() => {
+        // Token invalid hai — logout karo
+        handleAuthError();
+    });
 }
