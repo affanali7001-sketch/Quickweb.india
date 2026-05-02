@@ -115,28 +115,23 @@ function writeData(data) {
 =========================*/
 
 app.post("/api/login", loginLimiter, async (req, res) => {
-  try {
-    const { password } = req.body;
 
-    if (!password) {
-      return res.status(400).json({ message: "Password required" });
-    }
+  const { password } = req.body;
 
-    const valid = await bcrypt.compare(password, ADMIN_HASH);
-
-    if (!valid) {
-      return res.status(401).json({ message: "Wrong password" });
-    }
-
-    const token = crypto.randomBytes(24).toString("hex");
-
-    activeTokens.add(token);
-
-    res.json({ token });
-
-  } catch (err) {
-    res.status(500).json({ message: "Server error" });
+  if (!password) {
+    return res.status(400).json({ message: "Password required" });
   }
+
+  if (password !== "Affan@123#4$5^6") {
+    return res.status(401).json({ message: "Wrong password" });
+  }
+
+  const token = crypto.randomBytes(24).toString("hex");
+
+  activeTokens.add(token);
+
+  res.json({ token });
+
 });
 
 /* =========================
