@@ -8,12 +8,17 @@ const helmet = require("helmet");
 const rateLimit = require("express-rate-limit");
 const { createClient } = require("@supabase/supabase-js");
 
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+/* =========================
+   SUPABASE
+=========================*/
+
 const supabase = createClient(
   "https://ctjwjqpbzhtomgllwhdo.supabase.co",
   "sb_publishable_dEfra4mKpdaoFXsdKsjKzg_3540-8cP"
 );
-const app = express();
-const PORT = process.env.PORT || 3000;
 
 /* =========================
    BASIC SECURITY
@@ -43,14 +48,12 @@ const loginLimiter = rateLimit({
 =========================*/
 
 // password = Affan@123#4$5^6
-const ADMIN_HASH =
-  "$2b$10$1fW3M7FqK9MZ5Rz0hXk0u.eP1sO4y0d0E5mVdXxQ9wLqk8YfQp1G2";
+const ADMIN_PASSWORD = "Affan@123#4$5^6";
 
 /* =========================
    PATHS
 =========================*/
 
-const dataPath = path.join(__dirname, "content.json");
 const uploadsDir = path.join(__dirname, "public", "uploads");
 
 if (!fs.existsSync(uploadsDir)) {
@@ -72,6 +75,7 @@ const storage = multer.diskStorage({
   destination: uploadsDir,
   filename: (req, file, cb) => {
     const ext = path.extname(file.originalname);
+
     const name =
       Date.now() + "-" + crypto.randomBytes(6).toString("hex") + ext;
 
@@ -83,6 +87,7 @@ const upload = multer({
   storage,
   limits: { fileSize: 3 * 1024 * 1024 },
   fileFilter: (req, file, cb) => {
+
     const allowed = ["image/png", "image/jpeg", "image/webp"];
 
     if (!allowed.includes(file.mimetype)) {
@@ -100,6 +105,7 @@ const upload = multer({
 const activeTokens = new Set();
 
 function requireAuth(req, res, next) {
+
   const header = req.headers.authorization || "";
   const token = header.replace("Bearer ", "");
 
@@ -113,30 +119,34 @@ function requireAuth(req, res, next) {
 /* =========================
    DATA FUNCTIONS
 =========================*/
+
 async function readData() {
-  const { data, error } = await supabase
-    .from("site_content")
-    .select("data")
-    .eq("id", 1)
-    .single()
 
-  if (error) throw error
+  try {
 
-  return data.data
-}
+    const { data, error } = await supabase
+      .from("site_content")
+      .select("data")
+      .eq("id", 1)
+      .single();
 
-catch {
+    if (error) throw error;
+
+    return data.data;
+
+  } catch {
     return { projects: [] };
   }
 }
 
 async function writeData(content) {
+
   const { error } = await supabase
     .from("site_content")
     .update({ data: content })
-    .eq("id", 1)
+    .eq("id", 1);
 
-  if (error) throw error
+  if (error) throw error;
 }
 
 /* =========================
@@ -151,7 +161,7 @@ app.post("/api/login", loginLimiter, async (req, res) => {
     return res.status(400).json({ message: "Password required" });
   }
 
-  if (password !== "Affan@123#4$5^6") {
+  if (password !== ADMIN_PASSWORD) {
     return res.status(401).json({ message: "Wrong password" });
   }
 
@@ -167,22 +177,29 @@ app.post("/api/login", loginLimiter, async (req, res) => {
    CONTENT API
 =========================*/
 
-app.get("/api/content", (req, res) => {
-  res.json(await readData())
+app.get("/api/content", async (req, res) => {
+
+  const data = await readData();
+
+  res.json(data);
+
 });
 
-app.put("/api/content", requireAuth, (req, res) => {
-  await writeData(req.body)
+app.put("/api/content", requireAuth, async (req, res) => {
+
+  await writeData(req.body);
+
   res.json({ success: true });
+
 });
 
 /* =========================
    PROJECTS API
 =========================*/
 
-app.post("/api/projects", requireAuth, upload.single("image"), (req, res) => {
+app.post("/api/projects", requireAuth, upload.single("image"), async (req, res) => {
 
-  const data = readData();
+  const data = await readData();
 
   const project = {
     id: crypto.randomUUID(),
@@ -195,22 +212,24 @@ app.post("/api/projects", requireAuth, upload.single("image"), (req, res) => {
 
   data.projects.unshift(project);
 
-  writeData(data);
+  await writeData(data);
 
   res.json(project);
+
 });
 
-app.delete("/api/projects/:id", requireAuth, (req, res) => {
+app.delete("/api/projects/:id", requireAuth, async (req, res) => {
 
-  const data = readData();
+  const data = await readData();
 
   data.projects = data.projects.filter(
     p => p.id !== req.params.id
   );
 
-  writeData(data);
+  await writeData(data);
 
   res.json({ success: true });
+
 });
 
 /* =========================
@@ -218,5 +237,7 @@ app.delete("/api/projects/:id", requireAuth, (req, res) => {
 =========================*/
 
 app.listen(PORT, () => {
+
   console.log(`QuickWeb running on port ${PORT}`);
+
 });
