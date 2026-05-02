@@ -11,7 +11,7 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 /* ===============================
-   SECURITY CONFIG
+   SECURITY
 ================================*/
 
 app.use(helmet());
@@ -22,12 +22,10 @@ const loginLimiter = rateLimit({
 });
 
 /* ===============================
-   PASSWORD HASH
+   PASSWORD (ENV VARIABLE)
 ================================*/
 
-const ADMIN_HASH =
-  "$2b$10$7n3x7yCqkV7m7P5q2LQv7eC6pQ0Y0T6uKc0S7qf2Y6uT0FqHk3aW2"; 
-// password = Affan@123#4$5^6
+const ADMIN_HASH = process.env.ADMIN_HASH;
 
 /* ===============================
    PATHS
@@ -44,13 +42,14 @@ app.use(express.json({ limit: "2mb" }));
 app.use(express.static(path.join(__dirname, "public")));
 
 /* ===============================
-   FILE UPLOAD SECURITY
+   FILE UPLOAD
 ================================*/
 
 const storage = multer.diskStorage({
   destination: uploadsDir,
   filename: (req, file, cb) => {
     const ext = path.extname(file.originalname);
+
     const safeName =
       Date.now() + "-" + crypto.randomBytes(6).toString("hex") + ext;
 
@@ -62,6 +61,7 @@ const upload = multer({
   storage,
   limits: { fileSize: 3 * 1024 * 1024 },
   fileFilter: (req, file, cb) => {
+
     const allowed = ["image/png", "image/jpeg", "image/webp"];
 
     if (!allowed.includes(file.mimetype)) {
@@ -73,12 +73,13 @@ const upload = multer({
 });
 
 /* ===============================
-   TOKEN STORAGE
+   TOKEN AUTH
 ================================*/
 
 const activeTokens = new Set();
 
 function requireAuth(req, res, next) {
+
   const header = req.headers.authorization || "";
   const token = header.replace("Bearer ", "");
 
@@ -94,10 +95,12 @@ function requireAuth(req, res, next) {
 ================================*/
 
 function readData() {
+
   return JSON.parse(fs.readFileSync(dataPath, "utf8"));
 }
 
 function writeData(data) {
+
   fs.writeFileSync(dataPath, JSON.stringify(data, null, 2));
 }
 
@@ -106,7 +109,12 @@ function writeData(data) {
 ================================*/
 
 app.post("/api/login", loginLimiter, async (req, res) => {
+
   const { password } = req.body;
+
+  if (!password) {
+    return res.status(400).json({ message: "Password required" });
+  }
 
   const valid = await bcrypt.compare(password, ADMIN_HASH);
 
@@ -115,26 +123,30 @@ app.post("/api/login", loginLimiter, async (req, res) => {
   }
 
   const token = crypto.randomBytes(24).toString("hex");
+
   activeTokens.add(token);
 
   res.json({ token });
 });
 
 /* ===============================
-   CONTENT
+   CONTENT API
 ================================*/
 
 app.get("/api/content", (req, res) => {
+
   res.json(readData());
 });
 
 app.put("/api/content", requireAuth, (req, res) => {
+
   writeData(req.body);
+
   res.json({ success: true });
 });
 
 /* ===============================
-   PROJECTS
+   PROJECTS API
 ================================*/
 
 app.post(
@@ -142,6 +154,7 @@ app.post(
   requireAuth,
   upload.single("image"),
   (req, res) => {
+
     const data = readData();
 
     const project = {
@@ -154,6 +167,7 @@ app.post(
     };
 
     data.projects.unshift(project);
+
     writeData(data);
 
     res.json(project);
@@ -161,6 +175,7 @@ app.post(
 );
 
 app.delete("/api/projects/:id", requireAuth, (req, res) => {
+
   const data = readData();
 
   data.projects = data.projects.filter(
@@ -173,9 +188,10 @@ app.delete("/api/projects/:id", requireAuth, (req, res) => {
 });
 
 /* ===============================
-   SERVER
+   SERVER START
 ================================*/
 
 app.listen(PORT, () => {
+
   console.log(`QuickWeb running on port ${PORT}`);
 });
